@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Work Challan System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        .a4-container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 15mm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+            font-family: Arial, sans-serif;
+        }
+        input, textarea {
+            background-color: #f9fafb !important;
+            border: 1px solid #cbd5e1 !important;
+            padding: 4px 8px !important;
+            border-radius: 4px !important;
+        }
+        input:focus, textarea:focus {
+            background-color: #ffffff !important;
+            border-color: #2563eb !important;
+            outline: none !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-200 text-gray-800">
+
+    <!-- Top Action Navigation Bar -->
+    <div class="bg-slate-900 text-white p-4 sticky top-0 z-50 shadow-md">
+        <div class="max-w-5xl mx-auto flex flex-wrap justify-between items-center gap-3">
+            <h1 class="text-lg font-bold">Challan Generator & History</h1>
+            <div class="flex gap-2">
+                <button onclick="createNewChallan()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-bold transition">
+                    + New Challan
+                </button>
+                <button onclick="saveAndExportPDF()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-bold transition">
+                    💾 Save & Download PDF
+                </button>
+                <button onclick="toggleHistoryModal()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm font-bold transition">
+                    🔍 Search Old Challans
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Printable Challan Form -->
+    <div class="a4-container" id="challanArea">
+        
+        <!-- Company Header -->
+        <div class="text-center border-b border-gray-400 pb-3 mb-3">
+            <h2 class="text-2xl font-black tracking-wide text-slate-900">PP AUTO INNOVATORS</h2>
+            <p class="text-xs text-gray-600">Plot No. 17, Sector - 2, IIE, Sidcul Pantnagar, Rudrapur - 263153 (Uttarakhand)</p>
+            <p class="text-xs font-bold text-gray-700 mt-1">GSTIN: 05AALFP4647H2ZO | Financial Year 2026-27</p>
+        </div>
+
+        <div class="bg-slate-800 text-white text-center font-bold text-base py-1 uppercase mb-4 tracking-wider">
+            Job Work Challan
+        </div>
+
+        <!-- Meta Information -->
+        <div class="grid grid-cols-2 gap-4 text-xs mb-4">
+            <div class="space-y-2">
+                <div>
+                    <label class="font-bold block text-gray-700 mb-1">Challan Serial No:</label>
+                    <input type="text" id="challanNo" readonly class="w-full font-bold text-blue-700 font-mono">
+                </div>
+                <div>
+                    <label class="font-bold block text-gray-700 mb-1">Date of Challan:</label>
+                    <input type="date" id="challanDate" class="w-full">
+                </div>
+            </div>
+            <div class="space-y-2">
+                <div>
+                    <label class="font-bold block text-gray-700 mb-1">Vehicle Number:</label>
+                    <input type="text" id="vehicleNo" placeholder="e.g. UK06EC0260" class="w-full uppercase">
+                </div>
+                <div>
+                    <label class="font-bold block text-gray-700 mb-1">Place of Supply:</label>
+                    <input type="text" id="placeSupply" value="SIDCUL PANTNAGAR" class="w-full uppercase">
+                </div>
+            </div>
+        </div>
+
+        <!-- Consignee Details -->
+        <div class="border border-gray-300 p-3 rounded mb-4 text-xs bg-slate-50">
+            <h3 class="font-bold text-slate-800 border-b pb-1 mb-2">Detail of Receiver (Consignee):</h3>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="col-span-2">
+                    <label class="font-bold block mb-1">Company Name:</label>
+                    <input type="text" id="receiverName" placeholder="AMPP AUTO INNOVATORS" class="w-full font-bold uppercase">
+                </div>
+                <div class="col-span-2">
+                    <label class="font-bold block mb-1">Address:</label>
+                    <input type="text" id="receiverAddress" placeholder="PLOT NO- 9 SECTOR- 1 SIDCUL IIE PANTNAGAR" class="w-full uppercase">
+                </div>
+                <div>
+                    <label class="font-bold block mb-1">GSTIN:</label>
+                    <input type="text" id="receiverGST" placeholder="05ABUFA1627J1ZA" class="w-full font-mono uppercase">
+                </div>
+                <div>
+                    <label class="font-bold block mb-1">State & Code:</label>
+                    <input type="text" id="receiverState" value="UTTARAKHAND (05)" class="w-full uppercase">
+                </div>
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="mb-4">
+            <table class="w-full text-xs border border-gray-400 border-collapse">
+                <thead>
+                    <tr class="bg-gray-200 text-center font-bold">
+                        <th class="border border-gray-400 p-2 w-8">S.N.</th>
+                        <th class="border border-gray-400 p-2">Description of Goods</th>
+                        <th class="border border-gray-400 p-2 w-24">HSN/SAC</th>
+                        <th class="border border-gray-400 p-2 w-16">UOM</th>
+                        <th class="border border-gray-400 p-2 w-20">Qty</th>
+                        <th class="border border-gray-400 p-2 w-20">Rate</th>
+                        <th class="border border-gray-400 p-2 w-24">Taxable Value</th>
+                        <th class="border border-gray-400 p-1 w-8"></th>
+                    </tr>
+                </thead>
+                <tbody id="itemsBody">
+                    <!-- Rows added dynamically -->
+                </tbody>
+            </table>
+            <button onclick="addRow()" class="mt-2 text-xs bg-slate-700 hover:bg-slate-800 text-white font-bold px-3 py-1 rounded">
+                + Add Item Line
+            </button>
+        </div>
+
+        <!-- Calculations -->
+        <div class="grid grid-cols-2 gap-4 text-xs border border-gray-300 p-3 rounded">
+            <div>
+                <label class="font-bold block mb-1">Remarks:</label>
+                <textarea id="remarks" rows="3" class="w-full" placeholder="FOR JOB WORK ONLY"></textarea>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between font-bold">
+                    <span>Taxable Amount:</span>
+                    <span id="subTotal" class="font-mono">₹0.00</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span>CGST (%):</span>
+                    <input type="number" id="cgstVal" value="2.5" step="0.1" oninput="recalculate()" class="w-16 text-right">
+                    <span id="cgstAmt" class="font-mono">₹0.00</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span>SGST (%):</span>
+                    <input type="number" id="sgstVal" value="2.5" step="0.1" oninput="recalculate()" class="w-16 text-right">
+                    <span id="sgstAmt" class="font-mono">₹0.00</span>
+                </div>
+                <div class="flex justify-between border-t pt-2 font-black text-sm text-slate-900">
+                    <span>Grand Total:</span>
+                    <span id="grandTotal" class="font-mono">₹0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Signatures -->
+        <div class="flex justify-between items-end mt-12 text-xs">
+            <div class="text-center">
+                <p class="border-t border-gray-400 pt-1 w-40">Receiver's Signature</p>
+            </div>
+            <div class="text-center">
+                <p class="font-bold mb-8">For PP AUTO INNOVATORS</p>
+                <p class="border-t border-gray-400 pt-1 w-48">Authorised Signatory</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- History Modal Window -->
+    <div id="historyModal" class="hidden fixed inset-0 bg-black/60 flex justify-center items-center p-4 z-50">
+        <div class="bg-white w-full max-w-2xl rounded-lg p-5 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-2 mb-3">
+                <h3 class="font-bold text-lg">Saved Challan Database</h3>
+                <button onclick="toggleHistoryModal()" class="text-red-600 font-bold text-xl">&times;</button>
+            </div>
+            <input type="text" id="searchBox" onkeyup="searchRecords()" placeholder="Type Challan No or Company Name to search..." class="w-full mb-3 text-xs">
+            <div class="max-h-64 overflow-y-auto">
+                <table class="w-full text-
